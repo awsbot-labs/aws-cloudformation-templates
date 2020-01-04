@@ -1,0 +1,28 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Creates a route53 public hosted zone.",
+    "Parameters": {
+        "DNSDomain": {
+            "Description": "DNS Domain Name for an email address, e.g. domain.tld",
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "HostedZone": {
+          "Type" : "AWS::Route53::HostedZone",
+          "Properties" : {
+            "HostedZoneConfig" : {
+              "Comment" : "Created by CloudFormation on behalf of awsbot."
+            },
+            "HostedZoneTags" : [
+              {
+                "Key" : "Name",
+                "Value" : { "Ref": "DNSDomain" }
+              }
+            ],
+            "Name" : { "Ref": "DNSDomain" }
+          }
+        }
+    },
+    "Outputs": {}
+}

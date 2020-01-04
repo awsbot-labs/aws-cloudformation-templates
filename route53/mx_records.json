@@ -1,0 +1,256 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Creates a set of DNS records for additional mail domains for the awsbot mail server.",
+    "Parameters": {
+        "Name": {
+            "Description": "EMail Name, e.g. john. Leave out the @domain.tld, as this will be created automatically.",
+            "Type": "String"
+        },
+        "DNSDomain": {
+            "Description": "DNS Domain Name for an email address, e.g. domain.tld",
+            "Type": "String"
+        },
+        "EIP": {
+            "Description": " The IP address of a mail server that can handle requests for the Name@DNSDomain addess.",
+            "Type": "String",
+            "MinLength": "9",
+            "MaxLength": "18",
+            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})",
+            "ConstraintDescription": "must be a valid IP address of the form x.x.x.x."
+        }
+    },
+    "Resources": {
+        "SPFRecordSetGroup": {
+            "Type": "AWS::Route53::RecordSetGroup",
+            "Properties": {
+                "HostedZoneName": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            {
+                                "Ref": "DNSDomain"
+                            },
+                            "."
+                        ]
+                    ]
+                },
+                "RecordSets": [
+                    {
+                        "Name": {
+                            "Fn::Join": [
+                                "",
+                                [
+                                    {
+                                        "Ref": "DNSDomain"
+                                    },
+                                    "."
+                                ]
+                            ]
+                        },
+                        "Type": "TXT",
+                        "TTL": "300",
+                        "ResourceRecords": [
+                            {
+                                "Fn::Join": [
+                                    "",
+                                    [
+                                        "\"v=spf1 mx a ip4:",
+                                        {
+                                            "Ref": "EIP"
+                                        },
+                                        "/32 -all\""
+                                    ]
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        "MXRecordSetGroup": {
+            "Type": "AWS::Route53::RecordSetGroup",
+            "Properties": {
+                "HostedZoneName": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            {
+                                "Ref": "DNSDomain"
+                            },
+                            "."
+                        ]
+                    ]
+                },
+                "RecordSets": [
+                    {
+                        "Name": {
+                            "Fn::Join": [
+                                "",
+                                [
+                                    {
+                                        "Ref": "DNSDomain"
+                                    },
+                                    "."
+                                ]
+                            ]
+                        },
+                        "Type": "MX",
+                        "TTL": "300",
+                        "ResourceRecords": [
+                            {
+                                "Fn::Join": [
+                                    "",
+                                    [
+                                        "10 ",
+                                        "mail.",
+                                        {
+                                            "Ref": "DNSDomain"
+                                        },
+                                        "."
+                                    ]
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        "ARecordSetGroup": {
+            "Type": "AWS::Route53::RecordSetGroup",
+            "Properties": {
+                "HostedZoneName": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            {
+                                "Ref": "DNSDomain"
+                            },
+                            "."
+                        ]
+                    ]
+                },
+                "RecordSets": [
+                    {
+                        "Name": {
+                            "Fn::Join": [
+                                "",
+                                [
+                                    "mail.",
+                                    {
+                                        "Ref": "DNSDomain"
+                                    },
+                                    "."
+                                ]
+                            ]
+                        },
+                        "Type": "A",
+                        "TTL": "300",
+                        "ResourceRecords": [
+                            {
+                                "Ref": "EIP"
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        "DmarcRecordSetGroup": {
+            "Type": "AWS::Route53::RecordSetGroup",
+            "Properties": {
+                "HostedZoneName": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            {
+                                "Ref": "DNSDomain"
+                            },
+                            "."
+                        ]
+                    ]
+                },
+                "RecordSets": [
+                    {
+                        "Name": {
+                            "Fn::Join": [
+                                "",
+                                [
+                                    "_dmarc.",
+                                    {
+                                        "Ref": "DNSDomain"
+                                    },
+                                    "."
+                                ]
+                            ]
+                        },
+                        "Type": "TXT",
+                        "TTL": "300",
+                        "ResourceRecords": [
+                            {
+                                "Fn::Join": [
+                                    "",
+                                    [
+                                        "\"v=DMARC1; p=reject; sp=reject; rua=mailto:",
+                                        {
+                                            "Ref": "Name"
+                                        },
+                                        "@",
+                                        {
+                                            "Ref": "DNSDomain"
+                                        },
+                                        "; ruf=mailto:",
+                                        {
+                                            "Ref": "Name"
+                                        },
+                                        "@",
+                                        {
+                                            "Ref": "DNSDomain"
+                                        },
+                                        "; rf=afrf; pct=100; ri=86400\""
+                                    ]
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        "DkimRecordSetGroup": {
+            "Type": "AWS::Route53::RecordSetGroup",
+            "Properties": {
+                "HostedZoneName": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            {
+                                "Ref": "DNSDomain"
+                            },
+                            "."
+                        ]
+                    ]
+                },
+                "RecordSets": [
+                    {
+                        "Name": {
+                            "Fn::Join": [
+                                "",
+                                [
+                                    "_domainkey.",
+                                    {
+                                        "Ref": "DNSDomain"
+                                    },
+                                    "."
+                                ]
+                            ]
+                        },
+                        "Type": "TXT",
+                        "TTL": "300",
+                        "ResourceRecords": [
+                            "\"v=DKIM1; k=rsa; p=123\""
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "Outputs": {}
+}

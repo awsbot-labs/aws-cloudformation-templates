@@ -1,0 +1,54 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Description": "Creates a set of IAM roles that allow for a single-sign-on/trusted account senario.",
+	"Parameters": {
+		"MasterAccountId": {
+			"Description": " The ID of the master Single Sign On account.",
+			"Type": "String",
+			"MinLength": "12",
+			"MaxLength": "12",
+			"AllowedPattern": "(\\d{12,12})",
+			"ConstraintDescription": "must be a valid account id form 123456789012."
+		}
+	},
+	"Resources": {
+		"AdministratorIamRole": {
+			"Type": "AWS::IAM::Role",
+			"Properties": {
+				"AssumeRolePolicyDocument": {
+					"Version": "2012-10-17",
+					"Statement": [{
+						"Effect": "Allow",
+						"Principal": {
+							"AWS": {
+								"Fn::Join": [
+									"", [
+										"arn:aws:iam::", {
+											"Ref": "MasterAccountId"
+										},
+										":root"
+									]
+								]
+							}
+
+						},
+						"Action": ["sts:AssumeRole"]
+					}]
+				},
+				"Path": "/",
+				"Policies": [{
+					"PolicyName": "AdministratorAccessSingleSignOn",
+					"PolicyDocument": {
+						"Version": "2012-10-17",
+						"Statement": [{
+							"Effect": "Allow",
+							"Action": "*",
+							"Resource": "*"
+						}]
+					}
+				}]
+			}
+		}
+	},
+	"Outputs": {}
+}
